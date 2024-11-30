@@ -6,6 +6,11 @@ It comes with a free 50$ budget for starting and uses ~15 cent for a 20 minute i
 Since this is for private fun, the site has a simple one password for all users as login.
 
 
+Anyway, here is what it looks like:
+
+<img src=screenshot.png width=50%>
+
+
 ## Install
 - create an environment
 - activate it
