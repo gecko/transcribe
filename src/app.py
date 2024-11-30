@@ -30,12 +30,12 @@ def transcription(audio_file, options):
 
     if transcript.status == aai.TranscriptStatus.error:
         return transcript.error
-
+    speaker_tag = {"en": "Speaker", "de": "Sprecher"}[options["language"]]
     res = transcript.text
     if options["speaker_recognition"]:
         res = ""
         for utterance in transcript.utterances:
-            res += f"Speaker {utterance.speaker}: {utterance.text}\n\n"
+            res += f"**{speaker_tag} {utterance.speaker}**: {utterance.text}\n<br><br>"
     return res
 
 
@@ -84,7 +84,9 @@ else:
         st.success("Transcription Complete!")
 
         # Display transcribed text
-        st.text_area("Transcribed Text", transcribed_text, height=200)
+        # st.text_area("Transcribed Text", transcribed_text, height=200)
+        st.markdown("---")
+        st.markdown(transcribed_text, unsafe_allow_html=True)
 
         # Download transcribed text
         txt_name = ".".join(audio_file.name.split(".")[:-1]) + ".txt"
