@@ -8,7 +8,7 @@ import io
 
 # Set the style of the page
 def page_setup():
-    st.set_page_config(page_title="✍ Transcribe")
+    st.set_page_config(page_title="📜 Transcribe")
     st.markdown(
         """
         <style>
@@ -83,7 +83,7 @@ def render_login_page():
 
 def render_main_page():
     # Main page
-    st.title("Steffi's Interview Transcriber")
+    st.title("📜✍️ Interview Transcriber")
 
     st.subheader("Upload your audio file")
     # File upload
