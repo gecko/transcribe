@@ -21,4 +21,4 @@ USER myuser
 EXPOSE 8502
 
 # Run the Streamlit app with the specified command
-CMD ["streamlit", "run", "app.py", "--server.port=8502", "--theme.base=dark", "--theme.primaryColor=#ea0a8e"]
+CMD ["streamlit", "run", "app.py", "--server.port=8502", "--theme.base=dark", "--theme.primaryColor=#ea0a8e", "--server.enableXsrfProtection=false"]
