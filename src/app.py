@@ -5,9 +5,11 @@ import hashlib
 import os
 import io
 
+# Constants for speaker tags
+SPEAKER_TAG = {"en": "Speaker", "de": "Sprecher"}
 
-# Set the style of the page
-def page_setup():
+def setup_page():
+    """Set up the Streamlit page configuration and styling."""
     st.set_page_config(page_title="📜 Transcribe")
     st.markdown(
         """
@@ -22,24 +24,33 @@ def page_setup():
         r"""
         <style>
         .stDeployButton {
-                visibility: hidden;
-            }
+            visibility: hidden;
+        }
         </style>
         """,
         unsafe_allow_html=True,
     )
 
 
-# Set page state
-def init_state():
+def initialize_state():
+    """Initialize session state variables."""
     if "authenticated" not in st.session_state:
         st.session_state.authenticated = False
     if "transcript" not in st.session_state:
         st.session_state.transcript = ""
 
 
-# Transcribe audia using assemblyai API
-def transcription(audio_file, options):
+def transcribe_audio(audio_file, options):
+    """
+    Transcribe audio using AssemblyAI API.
+
+    Args:
+        audio_file: The uploaded audio file.
+        options: Dictionary containing transcription options (language and speaker recognition).
+
+    Returns:
+        str: Transcribed text or error message.
+    """
     config = aai.TranscriptionConfig(
         speech_model=aai.SpeechModel.best,
         language_code=options["language"],
@@ -52,29 +63,36 @@ def transcription(audio_file, options):
     audio_bytes.name = audio_file.name
     audio_bytes.seek(0)
 
-    transcript = transcriber.transcribe(audio_bytes)
+    try:
+        transcript = transcriber.transcribe(audio_bytes)
+        if transcript.status == aai.TranscriptStatus.error:
+            return transcript.error
 
-    if transcript.status == aai.TranscriptStatus.error:
-        return transcript.error
-    speaker_tag = {"en": "Speaker", "de": "Sprecher"}[options["language"]]
-    res = transcript.text
-    if options["speaker_recognition"]:
-        res = ""
-        for utterance in transcript.utterances:
-            res += f"**{speaker_tag} {utterance.speaker}**: {utterance.text}\n\n\n"
-    st.session_state.transcript = res
+        speaker_tag = SPEAKER_TAG[options["language"]]
+        result = transcript.text
+
+        if options["speaker_recognition"]:
+            result = ""
+            for utterance in transcript.utterances:
+                result += f"**{speaker_tag} {utterance.speaker}**: {utterance.text}\n\n\n"
+
+        st.session_state.transcript = result
+    except Exception as e:
+        return str(e)
 
 
-# Verify the password
-def check_password(password, hash_value):
+def verify_password(password, hash_value):
+    """Verify if the provided password matches the stored hash."""
     return hashlib.md5(password.encode()).hexdigest() == hash_value
 
 
 def render_login_page():
+    """Render the login page with a password input field."""
     st.title("Login")
     password = st.text_input("Enter Password", type="password")
+
     if st.button("Login"):
-        if check_password(password, PASSWORD_HASH):
+        if verify_password(password, PASSWORD_HASH):
             st.session_state.authenticated = True
             st.rerun()
         else:
@@ -82,6 +100,7 @@ def render_login_page():
 
 
 def render_main_page():
+    """Render the main application page with transcription functionality."""
     # Main page
     st.title("📜✍️ Interview Transcriber")
 
@@ -109,8 +128,11 @@ def render_main_page():
         # Dummy transcription call
         options = {"language": language, "speaker_recognition": speaker_recognition}
         with st.spinner("Transcribing..."):
-            transcription(audio_file, options)
-        st.success("Transcription Complete!")
+            error_message = transcribe_audio(audio_file, options)
+            if error_message:
+                st.error(error_message)
+            else:
+                st.success("Transcription Complete!")
     elif transcribe:
         st.warning("Please upload an audio file before transcribing.")
 
@@ -130,8 +152,8 @@ def render_main_page():
         )
 
 
-# Main page display function
 def render():
+    """Render the appropriate page based on authentication state."""
     if not st.session_state.authenticated:
         render_login_page()
     else:
@@ -144,11 +166,9 @@ if __name__ == "__main__":
     PASSWORD_HASH = hashlib.md5(os.getenv("USER_PW").encode()).hexdigest()
     aai.settings.api_key = os.getenv("ASSEMBLYAI_API_KEY")
 
-    # Set the style of the page
-    page_setup()
+    # Set up the page and initialize state
+    setup_page()
+    initialize_state()
 
-    # Set page state
-    init_state()
-
-    # display page
+    # Display the appropriate page
     render()
